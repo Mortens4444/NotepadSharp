@@ -7,6 +7,6 @@ namespace NotepadSharp.Interfaces
 {
     public interface IFileTabPageFactory
     {
-        FileTabPage Create(FileDetails fileDetails, int tabNumber, IContainer components, ToolStripItem[] menuItems);
+        FileTabPage Create(FileDetails fileDetails, int tabNumber, IContainer components, ContextMenuStrip contextMenuStrip);
     }
 }

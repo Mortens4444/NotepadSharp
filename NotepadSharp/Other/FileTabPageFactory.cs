@@ -2,12 +2,11 @@
 using NotepadSharp.FileHandling;
 using NotepadSharp.Interfaces;
 using System.ComponentModel;
-using System.Drawing;
 using System.Windows.Forms;
 
 namespace NotepadSharp.Other
 {
-    public class FileTabPageFactory : IFileTabPageFactory
+	public class FileTabPageFactory : IFileTabPageFactory
     {
         private readonly IFileWriter fileWriter;
 
@@ -16,20 +15,12 @@ namespace NotepadSharp.Other
             this.fileWriter = fileWriter;
         }
 
-        public FileTabPage Create(FileDetails fileDetails, int tabNumber, IContainer components, ToolStripItem[] menuItems)
+        public FileTabPage Create(FileDetails fileDetails, int tabNumber, IContainer components, ContextMenuStrip contextMenuStrip)
         {
             var result = new FileTabPage(fileWriter);
             result.Initialize(fileDetails, tabNumber);
-            var contextMenuStrip = new ContextMenuStrip(components);
-            contextMenuStrip.Items.AddRange(menuItems);
-            contextMenuStrip.Name = $"contextMenuStrip{tabNumber}";
-            contextMenuStrip.Size = new Size(197, 98);
-            contextMenuStrip.Opening += (object sender, CancelEventArgs e) =>
-            {
-                menuItems[0].Enabled = result.FileDetails != null;
-            };
-            result.ContextMenuStrip = contextMenuStrip;
-            result.TextBox.ContextMenuStrip = contextMenuStrip;
+			contextMenuStrip.Items[0].Enabled = fileDetails != null;
+			result.TextBox.ContextMenuStrip = contextMenuStrip;
             return result;
         }
     }

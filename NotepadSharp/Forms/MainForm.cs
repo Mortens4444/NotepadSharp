@@ -15,8 +15,9 @@ namespace NotepadSharp.Forms
         private readonly IFileTabPageFactory fileTabPageFactory;
         private readonly IOptionsHandler optionsHandler;
         private readonly OptionsDto options;
+		private readonly ContextMenuStrip contextMenuStrip;
 
-        public MainForm(IFileReader fileReader,
+		public MainForm(IFileReader fileReader,
             IFileTabPageFactory fileTabPageFactory,
             IOptionsHandler optionsHandler)
         {
@@ -32,9 +33,24 @@ namespace NotepadSharp.Forms
             this.optionsHandler = optionsHandler;
             options = optionsHandler.Options;
             wrapLongLinesMenuItem.Checked = !options.WrapLongLines;
-        }
 
-        private void MainForm_Load(object sender, EventArgs e)
+			var menuItems = new ToolStripItem[]
+			{
+				copyPathMenuItem,
+				toolStripSeparator3,
+				closeMenuItem,
+				closeAllButThisMenuItem,
+				closeAllMenuItem
+			};
+			contextMenuStrip = new ContextMenuStrip(components)
+			{
+				Name = $"contextMenuStrip",
+				Size = new Size(197, 98)
+			};
+			contextMenuStrip.Items.AddRange(menuItems);
+		}
+
+		private void MainForm_Load(object sender, EventArgs e)
         {
             WindowState = options.FormWindowState;
             Location = new Point(options.X, options.Y);
@@ -71,7 +87,7 @@ namespace NotepadSharp.Forms
             options.Height = Height;
         }
 
-        private void newMenuItem_Click(object sender, EventArgs e)
+        private void NewMenuItem_Click(object sender, EventArgs e)
         {
             OpenNewTab(null);
         }
@@ -79,20 +95,12 @@ namespace NotepadSharp.Forms
         private void OpenNewTab(FileDetails fileDetails)
         {
             var tabNumber = tabControl.Controls.Count + 1;
-            var menuItems = new ToolStripItem[]
-            {
-                copyPathMenuItem,
-                toolStripSeparator3,
-                closeMenuItem,
-                closeAllButThisMenuItem,
-                closeAllMenuItem
-            };
-            var newTab = fileTabPageFactory.Create(fileDetails, tabNumber, components, menuItems);
+            var newTab = fileTabPageFactory.Create(fileDetails, tabNumber, components, contextMenuStrip);
             tabControl.Controls.Add(newTab);
             tabControl.SelectedTab = newTab;
         }
 
-        private void copyPathMenuItem_Click(object sender, EventArgs e)
+        private void CopyPathMenuItem_Click(object sender, EventArgs e)
         {
             var textBox = ((ContextMenuStrip)((ToolStripMenuItem)sender).Owner).SourceControl as FileRichTextBox;
             if (textBox != null && textBox.FileDetails != null)
@@ -101,7 +109,7 @@ namespace NotepadSharp.Forms
             }
         }
 
-        private void openMenuItem_Click(object sender, EventArgs e)
+        private void OpenMenuItem_Click(object sender, EventArgs e)
         {
             var openFileDialog = new OpenFileDialog();
             if (openFileDialog.ShowDialog() == DialogResult.OK)
@@ -120,13 +128,13 @@ namespace NotepadSharp.Forms
             activeTab.TextBox.Text = fileContent;
         }
 
-        private void saveMenuItem_Click(object sender, EventArgs e)
+        private void SaveMenuItem_Click(object sender, EventArgs e)
         {
             var fileTabPage = tabControl.SelectedTab as FileTabPage;
             fileTabPage.SaveFile(options);
         }
 
-        private void saveAllMenuItem_Click(object sender, EventArgs e)
+        private void SaveAllMenuItem_Click(object sender, EventArgs e)
         {
             foreach (FileTabPage tabPage in tabControl.TabPages)
             {
@@ -134,27 +142,27 @@ namespace NotepadSharp.Forms
             }
         }
 
-        private void exitMenuItem_Click(object sender, EventArgs e)
+        private void ExitMenuItem_Click(object sender, EventArgs e)
         {
             Close();
         }
 
-        private void cutMenuItem_Click(object sender, EventArgs e)
+        private void CutMenuItem_Click(object sender, EventArgs e)
         {
             SendKeys.Send("^X");
         }
 
-        private void copyMenuItem_Click(object sender, EventArgs e)
+        private void CopyMenuItem_Click(object sender, EventArgs e)
         {
             SendKeys.Send("^C");
         }
 
-        private void pasteMenuItem_Click(object sender, EventArgs e)
+        private void PasteMenuItem_Click(object sender, EventArgs e)
         {
             SendKeys.Send("^V");
         }
 
-        private void aboutMenuItem_Click(object sender, EventArgs e)
+        private void AboutMenuItem_Click(object sender, EventArgs e)
         {
             var about = new AboutForm();
             about.ShowDialog();
@@ -165,13 +173,13 @@ namespace NotepadSharp.Forms
             optionsHandler.SetOptions();
         }
 
-        private void closeMenuItem_Click(object sender, EventArgs e)
+        private void CloseMenuItem_Click(object sender, EventArgs e)
         {
             var fileTabPage = tabControl.SelectedTab as FileTabPage;
             CloseTabPage(fileTabPage);
         }
 
-        private void closeAllButThisMenuItem_Click(object sender, EventArgs e)
+        private void CloseAllButThisMenuItem_Click(object sender, EventArgs e)
         {
             var selectedTabPage = tabControl.SelectedTab as FileTabPage;
             foreach (FileTabPage tabPage in tabControl.TabPages)
@@ -183,7 +191,7 @@ namespace NotepadSharp.Forms
             }
         }
 
-        private void closeAllMenuItem_Click(object sender, EventArgs e)
+        private void CloseAllMenuItem_Click(object sender, EventArgs e)
         {
             foreach (FileTabPage tabPage in tabControl.TabPages)
             {
@@ -209,12 +217,21 @@ namespace NotepadSharp.Forms
             }
         }
 
-        private void wrapLongLinesMenuItem_CheckedChanged(object sender, EventArgs e)
+        private void WrapLongLinesMenuItem_CheckedChanged(object sender, EventArgs e)
         {
             foreach (FileTabPage tabPage in tabControl.TabPages)
             {
                 tabPage.RefreshScrollBars(wrapLongLinesMenuItem.Checked);
             }
         }
-    }
+
+		private void TabControl_Selected(object sender, TabControlEventArgs e)
+		{
+			var fileTabPage = e.TabPage as FileTabPage;
+			if (fileTabPage != null)
+			{
+				contextMenuStrip.Items[0].Enabled = fileTabPage.FileDetails != null;
+			}
+		}
+	}
 }
